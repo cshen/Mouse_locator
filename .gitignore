@@ -1,0 +1,8 @@
+.DS_Store
+.venv-build/
+build/
+dist/
+resources/AppIcon.icns
+resources/AppIcon.iconset/
+__pycache__/
+*.pyc
