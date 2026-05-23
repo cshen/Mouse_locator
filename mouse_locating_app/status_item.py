@@ -2,7 +2,9 @@ import AppKit
 import Foundation
 import objc
 
-from .constants import STATUS_ITEM_TITLE
+from .constants import APP_NAME, STATUS_ITEM_TITLE
+
+_SF_SYMBOL = "pointer.arrow.motionlines"
 
 
 class StatusItemController(Foundation.NSObject):
@@ -26,7 +28,14 @@ class StatusItemController(Foundation.NSObject):
             AppKit.NSVariableStatusItemLength
         )
         button = self._status_item.button()
-        button.setTitle_(STATUS_ITEM_TITLE)
+        image = AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_(
+            _SF_SYMBOL, APP_NAME
+        )
+        if image is not None:
+            image.setTemplate_(True)
+            button.setImage_(image)
+        else:
+            button.setTitle_(STATUS_ITEM_TITLE)
         button.setToolTip_(self._status_message)
         self._rebuild_menu()
 
@@ -36,7 +45,6 @@ class StatusItemController(Foundation.NSObject):
         self._permission_granted = permission_granted
         self._status_message = status_message
         button = self._status_item.button()
-        button.setTitle_(STATUS_ITEM_TITLE if permission_granted else f"{STATUS_ITEM_TITLE}!")
         button.setToolTip_(status_message)
         self._rebuild_menu()
 
@@ -86,6 +94,14 @@ class StatusItemController(Foundation.NSObject):
 
         menu.addItem_(AppKit.NSMenuItem.separatorItem())
 
+        about_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            "About Mouse Locator",
+            "showAbout:",
+            "",
+        )
+        about_item.setTarget_(self)
+        menu.addItem_(about_item)
+
         quit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
             "Quit",
             "quitApp:",
@@ -96,6 +112,14 @@ class StatusItemController(Foundation.NSObject):
 
         self._status_item.setMenu_(menu)
         self._menu = menu
+
+    def showAbout_(self, sender):
+        del sender
+        alert = AppKit.NSAlert.alloc().init()
+        alert.setMessageText_(APP_NAME)
+        alert.setInformativeText_("Copyright C. Shen 2026")
+        alert.setAlertStyle_(AppKit.NSAlertStyleInformational)
+        alert.runModal()
 
     def toggleMonitoring_(self, sender):
         del sender

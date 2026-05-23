@@ -18,6 +18,9 @@ class LocatorView(AppKit.NSView):
         self.progress = progress
         self.setNeedsDisplay_(True)
 
+    def setCursorCenter_(self, point):
+        self.cursor_center = point
+
     def drawRect_(self, dirty_rect):
         del dirty_rect
         progress = min(max(getattr(self, "progress", 0.0), 0.0), 1.0)
@@ -26,8 +29,13 @@ class LocatorView(AppKit.NSView):
             return
 
         bounds = self.bounds()
-        center_x = AppKit.NSMidX(bounds)
-        center_y = AppKit.NSMidY(bounds)
+        cp = getattr(self, "cursor_center", None)
+        if cp is not None:
+            center_x = cp.x
+            center_y = cp.y
+        else:
+            center_x = AppKit.NSMidX(bounds)
+            center_y = AppKit.NSMidY(bounds)
 
         halo_diameter = 80 + 220 * progress
         halo_rect = AppKit.NSMakeRect(
@@ -145,7 +153,10 @@ class CursorLocatorOverlay(Foundation.NSObject):
         self._ensure_window()
 
         point = AppKit.NSEvent.mouseLocation()
-        self._window.setFrameOrigin_(self._window_origin_for_point(point))
+        origin = self._window_origin_for_point(point)
+        self._window.setFrameOrigin_(origin)
+        local_center = AppKit.NSMakePoint(point.x - origin.x, point.y - origin.y)
+        self._view.setCursorCenter_(local_center)
         self._view.setProgress_(0.0)
         self._window.orderFrontRegardless()
 
